@@ -69,9 +69,9 @@ def NFWX_MD(R,x,params):
     r_vir = params['r_vir']
     c = r_vir/r_s
     d = params['d']
-    epsilon = -(1+3*c)/(1+c) + c/d
-    Mtot = (d/(1+c))**2 * (d/c)**(epsilon+1) * np.exp(c/d)*special.gamma(epsilon+3)*special.gammaincc(epsilon+3,c/d)
-    Mtot += log(c+1)-c/(c+1)
+    epsilon = -(1.0+3*c)/(1.0+c) + c/d
+    Mtot = (d/(1.0+c))**2 * (d/c)**(epsilon+1) * np.exp(c/d)*special.gamma(epsilon+3)*special.gammaincc(epsilon+3,c/d)
+    Mtot += log(c+1.0)-c/(c+1.0)
 
     MD = NFWX_Mass(R,c,d) - x*Mtot
 
@@ -109,8 +109,7 @@ def NFWX_DF(E,params):
 ##Distribution function at relative energy E
 ##For NFWX profile
 #########################################################
-
-    E = max(E,1e-4)
+    Emin = min(E/10.0,1e-1) #pick how far to integrate out to 
 
     r_s = params['r_sX']
     r_vir = params['r_vir']
@@ -118,33 +117,35 @@ def NFWX_DF(E,params):
     d = params['d']
     
     #Find rmin
+    P0 = NFWX_P(0.0,params)
     def myfunc(R,E):
-        return E - NFWX_P(R,params)
+        if R<0: #so root finder doesn't find negative R
+            P = P0 - R
+        else:
+            P = NFWX_P(R,params)
+        return E -P
     res = optimize.root(myfunc,(1-E)/E,args=(E,),tol=1e-4)
     Rmin = res.x
-    Rmin = Rmin+1e-6
-    Rmax = c+20*d
-    
+    Rmax = optimize.root(myfunc,1.0/Emin,args=(Emin,),tol=1e-4) #radii at minimum E
+    Rmax = Rmax.x
     
     def integrand(R,params):
         epsilon = -(1+3*c)/(1+c) + c/d
         L = NFWX_Mass(R,c,d)
         
-        p = 1/(R*(1+R)**2)
-        p[R>c] = 1/c/(1+c)**2 *(R[R>c]/c)**epsilon * np.exp(-(R[R>c]-c)/d)
+        p = 1.0/(R*(1+R)**2)
+        p[R>c] = 1.0/c/(1.0+c)**2 *(R[R>c]/c)**epsilon * np.exp(-(R[R>c]-c)/d)
         
         f = (R/(L*(1+R)))**2 *p* (6*L + p*R*(1+R)*(3*R+1))
         f[R>c] = p[R>c]/L[R>c]/d/d *(d*d*epsilon*(epsilon -1) - 2*d*epsilon*R[R>c] + R[R>c]*R[R>c] +d*(epsilon*d - R[R>c])*(2 - p[R>c]*R[R>c]**3/L[R>c]))
         return f
 
-    R = np.linspace(Rmin,Rmax,1e3)
+    R = np.linspace(Rmin,Rmax,1e4)
     P = NFWX_P(R,params)
     
-    P[P>E] = E #so no error in square root
-    L = NFWX_Mass(R,c,d)
-    x = sqrt(E - P) #change integration variable from R->x
-    f = integrand(R,params)*2*R*R/L
-    
+    R = R[P<E]; P = P[P<E]
+
+    f = integrand(R,params)/sqrt(E-P)
     F = integrate.simps(f,R)
     
 
@@ -162,7 +163,7 @@ def NFWX_dimens(R,V,n,m,G,params):
     epsilon = -(1+3*c)/(1+c) + c/d
     
     Ltot = (d/(1+c))**2 * (d/c)**(epsilon+1) * np.exp(c/d)*special.gamma(epsilon+3)*special.gammaincc(epsilon+3,c/d)
-    Ltot += log(c+1)-c/(c+1)
+    Ltot += log(c+1)-c/(c+1.0)
     
     p0 = n*m/(4.0*pi*r_s**3*Ltot)
                  

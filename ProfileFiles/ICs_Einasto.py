@@ -20,8 +20,12 @@ def Einasto_RootGuess(params):
 #########################################################
 ##Returns initial guess for root finder method
 #########################################################
-
-    return 1.0
+    #Find R at tenth of mass
+    def myfunc(x):
+        alpha = params['alpha']
+        return 0.1 - special.gammainc(3.0/alpha, 2.0*x/alpha)
+    Rguess=optimize.fsolve(myfunc,1.0)
+    return Rguess
 
 def Einasto_MD(R,x,params):
 #########################################################
@@ -29,9 +33,7 @@ def Einasto_MD(R,x,params):
 ##Given random number x, root gives radius R
 #########################################################
     alpha = params['alpha']
-
     MF = special.gammainc(3.0/alpha,2.0/alpha * R) #M/Mtot
-
     MD = log(MF) - log(x)
 
     return MD
@@ -59,11 +61,12 @@ def Einasto_DF(E,params):
     #Find rmin
     def myfunc(R,E,params):
         return log(E)-log(Einasto_P(R,params))
-    Rmin=optimize.newton(myfunc,1.0,args=(E,params))    
+    Rmin=optimize.newton(myfunc,1.0,args=(E,params))
+    Rmin +=1e-4
 
     #Integrate
     def integrand(R,E,alpha,params):
-        L = special.gammainc(3/alpha,2.0/alpha * R)
+        L = special.gammainc(3/alpha,2.0/alpha * R) #M/Mtot
         P = Einasto_P(R,params)
         p = exp(-2.0/alpha * R)
         f =  2*p*R**(1/alpha)/L *(2*R + (2.0*R/alpha)**(3.0/alpha) * alpha*p /L/special.gamma(3.0/alpha)- alpha - 1)
@@ -82,9 +85,9 @@ def Einasto_dimens(R,V,n,m,G,params):
     r2 = params['r2']
     alpha = params['alpha']
 
-    p0 = m*n/(4.0*pi*r2*r2*r2/alpha *(alpha/2.0)**(3/alpha)* special.gamma(3/alpha))
-    r = R**(1/alpha)*r2
-    P0 = 4*pi*G*p0*r2*r2/alpha * (alpha/2.0)**(2/alpha)* special.gamma(2/alpha)
+    p0 = m*n/(4.0*pi*r2*r2*r2/alpha *(alpha/2.0)**(3.0/alpha)* special.gamma(3.0/alpha))
+    r = R**(1.0/alpha)*r2
+    P0 = 4*pi*G*p0*r2*r2/alpha * (alpha/2.0)**(2.0/alpha)* special.gamma(2.0/alpha)
     v = V*sqrt(P0)
 
     return r,v

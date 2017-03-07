@@ -61,13 +61,12 @@ def ICs(model,n,m,G,params):
     initialguess = eval(model+'_RootGuess')(params)
     res = optimize.root(eval(model+'_MD'),initialguess*rand,args=(rand,params),tol=1e-4,method='krylov')
     R = res.x
-    
+
     #Find V
     P = eval(model+'_P')(R,params) #potential
     E = pick_E(model,P,params) #energy
     V = sqrt(2*(P-E)) #velocity magnitude
-    
-    
+
     #Convert dimensionless R,V to r,v
     r,v = eval(model+'_dimens')(R,V,n,m,G,params)
     
@@ -87,8 +86,8 @@ def pick_E(model,P,params):
 
     #Generate distribution function
     E = np.linspace(0.0,max(P),1e3)
-    f = np.ones(E.shape[0])
-    for i in range(E.shape[0]):
+    f = np.zeros(E.shape[0])
+    for i in range(1,E.shape[0]):
         f[i] = eval(model+'_DF')(E[i],params)
 
     #Make sure no nans
@@ -102,10 +101,9 @@ def pick_E(model,P,params):
     for i in range(n):
         newE = E[E<P[i]] #newE goes to maxE(R)=P(R)
         F = integrate.cumtrapz(f[E<P[i]]*sqrt(P[i]-newE),newE, initial=0) #cummulative distribution
-        newE = newE[~np.isnan(F)]; F = F[~np.isnan(F)]; F[F<1e-8] = 1e-8
-        F = F/F[-1]#normailze
-        ans[i] = np.interp(rand[i], F, newE) #find at which energy F=rand
-
+        newE = newE[~np.isnan(F)]; F = F[~np.isnan(F)];
+        ans[i] = np.interp(rand[i]*F[-1], F, newE) #find at which energy F=rand
+   
     return ans
 	
 	

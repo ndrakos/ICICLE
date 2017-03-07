@@ -19,15 +19,14 @@ def Hernquist_RootGuess(params):
 #########################################################
 ##Returns initial guess for root finder method
 #########################################################
-    
-    return 10.0
+    return 1.0
 
 def Hernquist_MD(R,x,params):
 #########################################################
 ##Cummulative mass distribution for Hernquist profile
 ##Given random number x, root gives radius R
 #########################################################
-    MD=R*R/((R+1)*(R+1)) - x
+    MD = R - sqrt(x)*(R+1)
 
     return MD
 
@@ -45,7 +44,7 @@ def Hernquist_DF(E,params):
 #########################################################
 
     F = 3*asin(sqrt(E)) + sqrt(E*(1-E))*(1-2*E)*(8*E*E-8*E-3)
-    F = F/((1-E)**(5/2.0))
+    F = F/((1-E)**(2.5))
 
     return F
 	

@@ -1,11 +1,11 @@
 Model NFW
-G 1
+G 1.0
 m 1e-5
 n 1e5
 
 #NFW
 r_s 1.0 
-r_cut 30.0 
+r_cut 10.0 
 truncate True
 
 #NFWX
@@ -22,4 +22,4 @@ r_t 10.0
 
 #Einasto
 r2 1.0
-alpha 0.1
+alpha 0.2

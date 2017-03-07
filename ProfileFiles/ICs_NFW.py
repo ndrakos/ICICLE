@@ -65,7 +65,7 @@ def NFW_DF(E,params):
     def integrand(R,E):
         L = log(1+R)-R/(1+R)
         P = log(R+1)/R
-        p = 1/(R*(1+R)**2)
+        p = 1.0/(R*(1+R)**2)
         f =  (p*R/(L*(1+R)))**2 * (6*L/p + R*(1+R)*(3*R+1))
         Y = f / sqrt(E-P)
         return Y
@@ -89,9 +89,9 @@ def NFW_dimens(R,V,n,m,G,params):
     r_s = params['r_s']
     r_cut = params['r_cut']
     c = r_cut/r_s
-    p_s = n*m/(4.0*pi*r_s**3*(log(1.0 + c)-c/(1.0 +c)))
+    p0 = n*m/(4.0*pi*r_s**3*(log(1.0 + c)-c/(1.0 +c)))
     r = R*r_s
-    v = V*sqrt(4*pi*G*p_s*r_s**2)
+    v = V*sqrt(4*pi*G*p0*r_s**2)
 
     return r,v
 
